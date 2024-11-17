@@ -1,0 +1,32 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: top;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.scanner {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px 0;
+}
+
+.result {
+    text-align: center;
+    /* Center the text horizontally */
+    color: green;
+    /* Set the text color to green */
+    font-size: 2em;
+    /* Optional: adjust the font size */
+    margin-top: 20px;
+    /* Optional: add some space above */
+}
+
+.table-text {
+    text-align: center;
+    font-size: 32px;
+    /* Change to your desired font size */
+}
