@@ -4,6 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import crud from '@/util/crud';
 import logger from '@/util/logger';
 import jwt from 'jsonwebtoken';
+import { toPng } from 'html-to-image';
 
 const Ticket = () => {
     const [eventCode, setEventCode] = useState('');
@@ -83,29 +84,20 @@ const Ticket = () => {
     }, [token, tickets, index, eventCode, downloadedIndex]);
 
     const downloadQRCode = (filename) => {
-        const canvas = document.createElement('canvas');
         const svg = qrCodeRef.current.querySelector('svg');
-        const svgData = new XMLSerializer().serializeToString(svg);
 
-        const img = new Image();
-        img.onload = function () {
-            canvas.width = img.width;
-            canvas.height = img.height;
-
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-
-            const dataUrl = canvas.toDataURL('image/png');
-
-            const link = document.createElement('a');
-            link.download = `${filename}.png`;
-            link.href = dataUrl;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
-
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        toPng(svg)
+            .then(function (dataUrl) {
+                const link = document.createElement('a');
+                link.download = `${filename}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(function (error) {
+                console.error('Error generating QR code image: ', error);
+            });
     };
 
     return (

@@ -6,13 +6,14 @@
     "dev": "nodemon --watch 'src/**/*' --exec 'next' dev",
     "build": "next build",
     "start": "next start",
-    "starthttps":"next dev --experimental-https",
+    "starthttps": "next dev --experimental-https",
     "lint": "next lint"
   },
   "dependencies": {
     "@directus/sdk": "^18.0.0",
     "@yudiel/react-qr-scanner": "^2.0.8",
     "bootstrap": "^5.3.3",
+    "html-to-image": "^1.11.11",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.30.1",
     "next": "14.2.17",
