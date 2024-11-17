@@ -12,7 +12,17 @@ yarn dev
 pnpm dev
 # or
 bun dev
+
 ```
+
+Docker build
+sudo docker build -t qrticket-docker .
+
+Docker run
+sudo docker run -p 3000:3000 qrticket-docker
+
+Docker run in background
+sudo docker run -d -p 3000:3000 qrticket-docker
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

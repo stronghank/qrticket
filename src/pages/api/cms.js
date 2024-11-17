@@ -71,17 +71,56 @@ export default async function cms(req, res) {
                             res.status(200).json({ data: null })
                         } else {
                             try {
-                                const r = await client.request(createItem(param.collection, {
-                                    ...param.data,
-                                    ticket_id: decoded.ticket_id,
-                                    name: decoded.name,
-                                    email: decoded.email,
-                                    event_code: decoded.event_code
-                                }))
-                                res.status(200).json({ data: r })
+                                //Check if registered
+                                
+                                const existingQRItem = await client.request(readItems('qrticket', {
+                                    filter: {
+                                        id: {
+                                            _eq: decoded.ticket_id,
+                                        },
+                                        
+                                    },
+                                    fields: ['*.*'],
+                                }));
+                                //console.log("qrticket: ")
+                                //console.log(existingQRItem);
+                                if (existingQRItem && existingQRItem.length > 0) {
+                                    const alreadyCheckedInItem = await client.request(readItems('checkin', {
+                                        filter: {
+                                            ticket_id: {
+                                                _eq: decoded.ticket_id,
+                                            }   
+                                        },
+                                        fields: ['*.*'],
+                                    }));
+                                    //console.log("checkin:")
+                                    //console.log(alreadyCheckedInItem);
+                                    if (alreadyCheckedInItem && alreadyCheckedInItem.length > 0) {
+                                        alreadyCheckedInItem[0].status = "DUPLICATED";
+                                        res.status(200).json({ data: alreadyCheckedInItem[0] })
+                                        //console.log("res: ");
+                                        //console.log(res);
+                                    }else{
+                                        const r = await client.request(createItem(param.collection, {
+                                            ...param.data,
+                                            ticket_id: decoded.ticket_id,
+                                            name: decoded.name,
+                                            email: decoded.email,
+                                            event_code: decoded.event_code
+                                        }))
+                                        console.log("Create checkin:")
+                                        console.log(r);
+                                        r.status = "CREATED"
+                                        res.status(200).json({ data: r})
+                                    }
+                                    
+                                }else{
+                                    res.status(200).json({ data: null })
+                                }
+                                
                             } catch (e) {
                                 logger.error(`e: ${JSON.stringify(e, null, 2)}`)
-                                res.status(200).json({ data: null })
+                                res.status(200).json({ data: null})
                             }
                         }
                     })
