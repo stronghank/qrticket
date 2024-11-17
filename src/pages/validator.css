@@ -1,32 +1,80 @@
+/* Add this CSS to your existing styles */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: top;
-    height: 100vh;
+    max-width: 800px;
+    margin: 50px auto;
     padding: 20px;
-    box-sizing: border-box;
-}
-
-.scanner {
-    width: 100%;
-    max-width: 600px;
-    margin: 20px 0;
-}
-
-.result {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
-    /* Center the text horizontally */
-    color: green;
-    /* Set the text color to green */
-    font-size: 2em;
-    /* Optional: adjust the font size */
-    margin-top: 20px;
-    /* Optional: add some space above */
+}
+
+h1 {
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.Scanner {
+    border: 6px solid #ff6f61;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+}
+
+.table-container {
+    margin: 20px auto;
+    width: 100%; /* Set the table container width to 100% */
 }
 
 .table-text {
-    text-align: center;
-    font-size: 32px;
-    /* Change to your desired font size */
+    font-size: 1.4em;
+    color: #333;
+}
+
+.table th {
+    padding: 16px;
+    background-color: #4285f4; /* Google Blue */
+    color: #fff;
+}
+
+.table td {
+    padding: 12px;
+    background-color: #90caf9; /* Light Blue */
+}
+
+.table tr:nth-child(even) {
+    background-color: #f0f4c3; /* Light Green */
+}
+
+/* Media query for smaller screens */
+@media screen and (max-width: 414px) {
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    .Scanner {
+        padding: 15px;
+    }
+
+    .table-text {
+        font-size: 1.2em;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px;
+    }
 }

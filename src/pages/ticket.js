@@ -77,7 +77,7 @@ const Ticket = () => {
     useEffect(() => {
         if (token && index !== downloadedIndex) {
             const currentTicket = tickets[index];
-            const filename = `${currentTicket.id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}`;
+            const filename = `${currentTicket.qrcode_id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}`;
             downloadQRCode(filename);
             setDownloadedIndex(index);
         }
