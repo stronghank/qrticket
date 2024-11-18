@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import { QRCodeSVG } from 'qrcode.react';
 import crud from '@/util/crud';
@@ -13,7 +13,53 @@ const Ticket = () => {
     const [token, setToken] = useState(undefined);
     const qrCodeRef = useRef(null);
     const [stopTimeout, setStopTimeout] = useState(false);
-    const [downloadedIndex, setDownloadedIndex] = useState(-1);
+
+    useEffect(() => {
+        if (token) {
+            downloadQRCode();
+        }
+    }, [token]);
+
+    const downloadQRCode = () => {
+        const svg = qrCodeRef.current.querySelector('svg');
+
+        toPng(svg)
+            .then((dataUrl) => {
+                const link = document.createElement('a');
+                const currentTicket = tickets[index];
+                const filename = `${currentTicket.qrcode_id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}`;
+                link.download = `${filename}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch((error) => {
+                console.error('Error generating QR code image: ', error);
+            });
+    };
+
+    const handleEventCodeChange = (e) => {
+        setEventCode(e.target.value);
+    };
+
+    useEffect(() => {
+        if (eventCode) {
+            crud({
+                action: 'R',
+                collection: 'qrticket',
+                filter: {
+                    event_code: {
+                        _eq: eventCode,
+                    },
+                },
+            }).then((r) => {
+                setTickets(r);
+                setIndex(0);
+                setStopTimeout(false);
+            });
+        }
+    }, [eventCode]);
 
     useEffect(() => {
         if (tickets && index !== -1 && !stopTimeout) {
@@ -37,7 +83,6 @@ const Ticket = () => {
                         }
                     }
                 );
-                logger.info(`index: ${tempIndex}`);
 
                 if (tempIndex === 0 && stopTimeout) {
                     setStopTimeout(false); // Reset stopTimeout flag
@@ -49,56 +94,6 @@ const Ticket = () => {
             return () => clearTimeout(timeoutId);
         }
     }, [index, tickets, stopTimeout]);
-
-    const handleEventCodeChange = (e) => {
-        setEventCode(e.target.value);
-    };
-
-    useEffect(() => {
-        if (eventCode) {
-            crud({
-                action: `R`,
-                collection: `qrticket`,
-                filter: {
-                    event_code: {
-                        _eq: eventCode,
-                    },
-                },
-            }).then((r) => {
-                logger.info(`r: ${JSON.stringify(r, null, 2)}`);
-                setTickets(r);
-                setIndex(0);
-                setStopTimeout(false);
-                setDownloadedIndex(-1);
-            });
-        }
-    }, [eventCode]);
-
-    useEffect(() => {
-        if (token && index !== downloadedIndex) {
-            const currentTicket = tickets[index];
-            const filename = `${currentTicket.qrcode_id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}`;
-            downloadQRCode(filename);
-            setDownloadedIndex(index);
-        }
-    }, [token, tickets, index, eventCode, downloadedIndex]);
-
-    const downloadQRCode = (filename) => {
-        const svg = qrCodeRef.current.querySelector('svg');
-
-        toPng(svg)
-            .then(function (dataUrl) {
-                const link = document.createElement('a');
-                link.download = `${filename}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            })
-            .catch(function (error) {
-                console.error('Error generating QR code image: ', error);
-            });
-    };
 
     return (
         <Container className="d-flex flex-column align-items-center mt-5">
