@@ -5,39 +5,45 @@ import crud from '@/util/crud';
 import logger from '@/util/logger';
 import jwt from 'jsonwebtoken';
 import { toPng } from 'html-to-image';
+import JSZip from 'jszip';
 
 const Ticket = () => {
     const [eventCode, setEventCode] = useState('');
     const [tickets, setTickets] = useState(undefined);
     const [index, setIndex] = useState(-1);
-    const [token, setToken] = useState(undefined);
-    const qrCodeRef = useRef(null);
-    const [stopTimeout, setStopTimeout] = useState(false);
+    const [zip, setZip] = useState(new JSZip());
+    const qrCodeRefs = useRef([]);
+
+    const handleDownloadAll = () => {
+        zip.generateAsync({ type: 'blob' }).then((content) => {
+            const link = document.createElement('a');
+            link.download = 'tickets.zip';
+            link.href = URL.createObjectURL(content);
+            link.click();
+        });
+    };
 
     useEffect(() => {
-        if (token) {
-            downloadQRCode();
+        if (tickets && index !== -1) {
+            const currentTicket = tickets[index];
+            const svg = qrCodeRefs.current[index].querySelector('svg');
+
+            toPng(svg)
+                .then((dataUrl) => {
+                    const filename = `${currentTicket.qrcode_id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}.png`;
+                    zip.file(filename, dataUrl.split('base64,')[1], { base64: true });
+
+                    if (index === tickets.length - 1) {
+                        handleDownloadAll();
+                    } else {
+                        setIndex(index + 1);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error generating QR code image: ', error);
+                });
         }
-    }, [token]);
-
-    const downloadQRCode = () => {
-        const svg = qrCodeRef.current.querySelector('svg');
-
-        toPng(svg)
-            .then((dataUrl) => {
-                const link = document.createElement('a');
-                const currentTicket = tickets[index];
-                const filename = `${currentTicket.qrcode_id}_${currentTicket.name.replace(/\s+/g, '_')}_${eventCode}`;
-                link.download = `${filename}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            })
-            .catch((error) => {
-                console.error('Error generating QR code image: ', error);
-            });
-    };
+    }, [tickets, index]);
 
     const handleEventCodeChange = (e) => {
         setEventCode(e.target.value);
@@ -56,44 +62,9 @@ const Ticket = () => {
             }).then((r) => {
                 setTickets(r);
                 setIndex(0);
-                setStopTimeout(false);
             });
         }
     }, [eventCode]);
-
-    useEffect(() => {
-        if (tickets && index !== -1 && !stopTimeout) {
-            const timeoutId = setTimeout(() => {
-                let tempIndex = (index + 1) % tickets.length;
-                setIndex(tempIndex);
-                jwt.sign(
-                    {
-                        ticket_id: tickets[tempIndex].id,
-                        name: tickets[tempIndex].name,
-                        email: tickets[tempIndex].email,
-                        event_code: tickets[tempIndex].event_code,
-                    },
-                    process.env.NEXT_PUBLIC_JWTSECRET,
-                    { algorithm: 'HS256' },
-                    function (err, jsonwebtoken) {
-                        if (err) {
-                            logger.error(`err: ${err}`);
-                        } else {
-                            setToken(jsonwebtoken);
-                        }
-                    }
-                );
-
-                if (tempIndex === 0 && stopTimeout) {
-                    setStopTimeout(false); // Reset stopTimeout flag
-                } else if (tempIndex === 0) {
-                    setStopTimeout(true);
-                }
-            }, 3000);
-
-            return () => clearTimeout(timeoutId);
-        }
-    }, [index, tickets, stopTimeout]);
 
     return (
         <Container className="d-flex flex-column align-items-center mt-5">
@@ -113,8 +84,13 @@ const Ticket = () => {
                     </Form>
                 </Col>
             </Row>
-            <div className="text-center mt-4" ref={qrCodeRef}>
-                <QRCodeSVG size={256} value={token} />
+            <div className="text-center mt-4">
+                {tickets &&
+                    tickets.map((ticket, idx) => (
+                        <div key={idx} ref={(ref) => (qrCodeRefs.current[idx] = ref)}>
+                            <QRCodeSVG size={256} value={jwt.sign({ ticket_id: ticket.id }, process.env.NEXT_PUBLIC_JWTSECRET)} />
+                        </div>
+                    ))}
             </div>
         </Container>
     );
