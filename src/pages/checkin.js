@@ -23,8 +23,16 @@ const CheckinPage = () => {
                     collection: 'checkin',
                     filter: {} // You might need to adjust the filter if necessary
                 });
-                setCheckins(data);
-                setFilteredCheckins(data);
+
+                // Convert the checkin_datetime to the desired format
+                const formattedData = data.map(item => {
+                    const checkinDate = new Date(item.checkin_datetime);
+                    const formattedDate = `${checkinDate.getFullYear()}-${(checkinDate.getMonth() + 1).toString().padStart(2, '0')}-${checkinDate.getDate().toString().padStart(2, '0')} ${checkinDate.getHours().toString().padStart(2, '0')}:${checkinDate.getMinutes().toString().padStart(2, '0')}:${checkinDate.getSeconds().toString().padStart(2, '0')}`;
+                    return { ...item, checkin_datetime: formattedDate };
+                });
+
+                setCheckins(formattedData);
+                setFilteredCheckins(formattedData);
             } catch (error) {
                 console.error('Error fetching check-ins:', error);
             }
@@ -62,13 +70,21 @@ const CheckinPage = () => {
             }
             return 0;
         });
+
+        // Convert the checkin_datetime to the desired format
+        sortedData.forEach(item => {
+            const checkinDate = new Date(item.checkin_datetime);
+            const formattedDate = `${checkinDate.getFullYear()}-${(checkinDate.getMonth() + 1).toString().padStart(2, '0')}-${checkinDate.getDate().toString().padStart(2, '0')} ${checkinDate.getHours().toString().padStart(2, '0')}:${checkinDate.getMinutes().toString().padStart(2, '0')}:${checkinDate.getSeconds().toString().padStart(2, '0')}`;
+            item.checkin_datetime = formattedDate;
+        });
+
         setFilteredCheckins(sortedData);
         setSortField(field);
         setSortOrder(order);
     };
 
     const downloadCSV = () => {
-        const csv = Papa.unparse(filteredCheckins);
+        const csv = Papa.unparse(checkins);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
         saveAs(blob, 'checkin_data.csv');
     };
